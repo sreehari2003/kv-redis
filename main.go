@@ -78,12 +78,13 @@ func handleConnection(s net.Conn, db *Database) {
 		switch command {
 		case "SET":
 			db.set(key, value)
+		case "GET":
+			db.get(key)
+		case "DELETE":
+			db.delete(key)
+
 		case "HELP":
-			s.Write([]byte(`
-SET key value: used to set a key , value to Database,
-GET key : used to get the key, value from already existing db
-DELETE key: Used to delete the key , value from database
-`))
+			s.Write([]byte(help))
 
 		default:
 			s.Write([]byte("Invalid Input\n"))
@@ -97,3 +98,19 @@ DELETE key: Used to delete the key , value from database
 func (s *Database) set(key, value string) {
 	s.data[key] = value
 }
+
+func (s *Database) get(key string) (string, bool) {
+	val, ok := s.data[key]
+
+	return val, ok
+}
+
+func (s *Database) delete(key string) {
+	delete(s.data, key)
+}
+
+const help = `
+SET key value: used to set a key , value to Database,
+GET key : used to get the key, value from already existing db
+DELETE key: Used to delete the key , value from database
+`
