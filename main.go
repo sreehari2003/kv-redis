@@ -6,10 +6,12 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Database struct {
 	data map[string]string
+	mu   sync.Mutex
 }
 
 // After running the code you can access the code via telnet
@@ -63,7 +65,8 @@ func handleConnection(s net.Conn, db *Database) {
 		}
 		temp := strings.Fields(netData)
 
-		if len(temp) == 0 {
+		if len(temp) == 0 && temp[0] != "help" {
+			s.Write([]byte("Invalid Input , enter 'help' to get the info \n"))
 			continue
 		}
 
@@ -78,13 +81,18 @@ func handleConnection(s net.Conn, db *Database) {
 		switch command {
 		case "SET":
 			db.set(key, value)
+			s.Write([]byte("OK\n"))
+
 		case "GET":
 			db.get(key)
+
 		case "DELETE":
 			db.delete(key)
 
 		case "HELP":
 			s.Write([]byte(help))
+		case "Q":
+			os.Exit(0)
 
 		default:
 			s.Write([]byte("Invalid Input\n"))
@@ -96,16 +104,23 @@ func handleConnection(s net.Conn, db *Database) {
 }
 
 func (s *Database) set(key, value string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.data[key] = value
+
 }
 
 func (s *Database) get(key string) (string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	val, ok := s.data[key]
 
 	return val, ok
 }
 
 func (s *Database) delete(key string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	delete(s.data, key)
 }
 
@@ -113,4 +128,5 @@ const help = `
 SET key value: used to set a key , value to Database,
 GET key : used to get the key, value from already existing db
 DELETE key: Used to delete the key , value from database
+Q : quie
 `
