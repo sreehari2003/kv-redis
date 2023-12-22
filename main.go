@@ -65,8 +65,12 @@ func handleConnection(s net.Conn, db *Database) {
 		}
 		temp := strings.Fields(netData)
 
-		if len(temp) == 0 && temp[0] != "help" {
-			s.Write([]byte("Invalid Input , enter 'help' to get the info \n"))
+		if temp[0] == "help" {
+			s.Write([]byte(help))
+			continue
+
+		} else if len(temp) < 3 {
+			s.Write([]byte("Invalid Input\n"))
 			continue
 		}
 
@@ -128,5 +132,5 @@ const help = `
 SET key value: used to set a key , value to Database,
 GET key : used to get the key, value from already existing db
 DELETE key: Used to delete the key , value from database
-Q : quie
+Q : quit
 `
